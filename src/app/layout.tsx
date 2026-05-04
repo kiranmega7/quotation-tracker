@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { PipelineChatbot } from "@/components/chat/PipelineChatbot";
 import { Nav } from "@/components/Nav";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}>
         <Nav />
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+        <PipelineChatbot />
       </body>
     </html>
   );
