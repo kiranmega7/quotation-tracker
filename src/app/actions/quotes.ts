@@ -26,8 +26,13 @@ function parseNum(s: string, fallback = 0): number {
 export async function createQuote(form: QuoteFormState) {
   const supabase = createServerClient();
   if (!supabase) return { error: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
 
   const row = {
+    user_id: user.id,
     company_name: form.company_name.trim(),
     contact_name: form.contact_name.trim() || null,
     contact_number: form.contact_number.trim() || null,
@@ -57,6 +62,10 @@ export async function createQuote(form: QuoteFormState) {
 export async function updateQuote(id: string, form: QuoteFormState) {
   const supabase = createServerClient();
   if (!supabase) return { error: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
 
   const row = {
     company_name: form.company_name.trim(),
@@ -75,7 +84,7 @@ export async function updateQuote(id: string, form: QuoteFormState) {
     return { error: "Company name is required." };
   }
 
-  const { error } = await supabase.from("quotes").update(row).eq("id", id);
+  const { error } = await supabase.from("quotes").update(row).eq("id", id).eq("user_id", user.id);
   if (error) return { error: error.message };
 
   await replaceFollowUpsForQuote(supabase, id, row.quote_sent_date);

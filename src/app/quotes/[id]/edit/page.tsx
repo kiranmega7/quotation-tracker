@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { QuoteForm } from "@/components/QuoteForm";
 import { SetupBanner } from "@/components/SetupBanner";
 import { createServerClient } from "@/lib/supabase/server";
@@ -16,8 +16,17 @@ export default async function EditQuotePage({ params }: { params: { id: string }
       </div>
     );
   }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const { data, error } = await supabase.from("quotes").select("*").eq("id", params.id).maybeSingle();
+  const { data, error } = await supabase
+    .from("quotes")
+    .select("*")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (error) {
     return <p className="text-red-400">{error.message}</p>;

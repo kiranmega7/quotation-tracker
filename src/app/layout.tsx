@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { PipelineChatbot } from "@/components/chat/PipelineChatbot";
 import { Nav } from "@/components/Nav";
+import { createServerClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -20,17 +21,22 @@ export const metadata: Metadata = {
   description: "Track quotations, follow-ups, and notes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = createServerClient();
+  const {
+    data: { user },
+  } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}>
         <Nav />
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
-        <PipelineChatbot />
+        {user && <PipelineChatbot />}
       </body>
     </html>
   );

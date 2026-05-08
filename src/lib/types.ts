@@ -12,6 +12,7 @@ export type FollowUpOffset = 3 | 7 | 14 | 21;
 
 export interface QuoteRow {
   id: string;
+  user_id: string;
   company_name: string;
   contact_name: string | null;
   contact_number: string | null;

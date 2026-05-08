@@ -6,6 +6,10 @@ import { createServerClient } from "@/lib/supabase/server";
 export async function addNote(quoteId: string, body: string) {
   const supabase = createServerClient();
   if (!supabase) return { error: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
 
   const trimmed = body.trim();
   if (!trimmed) return { error: "Note cannot be empty." };

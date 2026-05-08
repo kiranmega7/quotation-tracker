@@ -1,8 +1,9 @@
 import { QuoteForm } from "@/components/QuoteForm";
+import { redirect } from "next/navigation";
 import { SetupBanner } from "@/components/SetupBanner";
 import { createServerClient } from "@/lib/supabase/server";
 
-export default function NewQuotePage() {
+export default async function NewQuotePage() {
   const supabase = createServerClient();
   if (!supabase) {
     return (
@@ -12,6 +13,10 @@ export default function NewQuotePage() {
       </div>
     );
   }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   return (
     <div className="space-y-8">

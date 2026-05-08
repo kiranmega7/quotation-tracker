@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { FollowUpCountdown } from "@/components/FollowUpCountdown";
 import { FollowUpTimeline } from "@/components/FollowUpTimeline";
@@ -22,6 +22,10 @@ export default async function QuoteDetailPage({ params }: { params: { id: string
       </div>
     );
   }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data, error } = await supabase
     .from("quotes")
@@ -33,6 +37,7 @@ export default async function QuoteDetailPage({ params }: { params: { id: string
     `
     )
     .eq("id", params.id)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) {

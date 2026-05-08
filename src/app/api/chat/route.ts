@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getPipelineSnapshot } from "@/lib/pipeline-context";
 import { applyPipelineActions, parseExtractedActions } from "@/lib/pipeline-write-actions";
+import { createServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,17 @@ export async function POST(req: Request) {
 
     if (messages.length === 0) {
       return NextResponse.json({ error: "At least one message is required." }, { status: 400 });
+    }
+
+    const supabase = createServerClient();
+    if (!supabase) {
+      return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
     const snapshotResult = await getPipelineSnapshot();

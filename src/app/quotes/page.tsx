@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { QuotesFilters } from "@/components/QuotesFilters";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -53,11 +54,16 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
     );
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   let query = supabase.from("quotes").select(`
     *,
     follow_ups (*),
     notes (id, body, created_at)
-  `);
+  `).eq("user_id", user.id);
 
   if (searchParams.status) {
     query = query.eq("status", searchParams.status);
