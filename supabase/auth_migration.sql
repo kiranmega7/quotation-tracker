@@ -5,11 +5,45 @@ alter table public.quotes
 
 create index if not exists quotes_user_id on public.quotes (user_id);
 
--- Ensure existing rows are assigned before making user_id NOT NULL.
--- Replace this with your own mapping if you already have multi-user data.
-update public.quotes
-set user_id = auth.uid()
-where user_id is null and auth.uid() is not null;
+alter table public.quotes
+  alter column user_id set default auth.uid();
+
+-- Assign existing null user_id rows to first created auth user.
+do $$
+declare
+  first_user_id uuid;
+begin
+  select id into first_user_id
+  from auth.users
+  order by created_at asc
+  limit 1;
+
+  if first_user_id is null then
+    raise exception 'No users found in auth.users. Create at least one account first.';
+  end if;
+
+  update public.quotes
+  set user_id = first_user_id
+  where user_id is null;
+end;
+$$;
+
+create or replace function public.set_quote_user_id()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.user_id is null then
+    new.user_id = auth.uid();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists quotes_set_user_id on public.quotes;
+create trigger quotes_set_user_id
+  before insert on public.quotes
+  for each row execute procedure public.set_quote_user_id();
 
 alter table public.quotes
   alter column user_id set not null;

@@ -6,7 +6,7 @@ create extension if not exists "pgcrypto";
 -- Quotes
 create table public.quotes (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   company_name text not null,
   contact_name text,
   contact_number text,
@@ -71,6 +71,22 @@ $$;
 create trigger quotes_updated_at
   before update on public.quotes
   for each row execute procedure public.set_updated_at();
+
+create or replace function public.set_quote_user_id()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.user_id is null then
+    new.user_id = auth.uid();
+  end if;
+  return new;
+end;
+$$;
+
+create trigger quotes_set_user_id
+  before insert on public.quotes
+  for each row execute procedure public.set_quote_user_id();
 
 -- Row Level Security
 alter table public.quotes enable row level security;
