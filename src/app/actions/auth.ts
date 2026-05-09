@@ -29,9 +29,17 @@ export async function signupAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const name = String(formData.get("name") ?? "").trim();
+  const inviteCode = String(formData.get("invite_code") ?? "").trim();
 
-  if (!email || !password || !name) {
+  if (!email || !password || !name || !inviteCode) {
     redirect("/signup?error=missing");
+  }
+
+  const expectedInviteCode = process.env.INVITE_CODE?.trim();
+  if (!expectedInviteCode || inviteCode !== expectedInviteCode) {
+    redirect(
+      `/signup?error=${encodeURIComponent("Invalid invite code. Please contact admin for access.")}`
+    );
   }
 
   const { error } = await supabase.auth.signUp({
